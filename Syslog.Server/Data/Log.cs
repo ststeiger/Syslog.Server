@@ -1,15 +1,7 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="Log.cs" company="https://github.com/jhueppauff/Syslog.Server">
-// Copyright 2018 Jhueppauff
-// MIT License
-// For licence details visit https://github.com/jhueppauff/Syslog.Server/blob/master/LICENSE
-// </copyright>
-//-----------------------------------------------------------------------
-
+﻿
 namespace Syslog.Server.Data
 {
-    using System.IO;
-    using System.Text;
+    
 
     /// <summary>
     /// Log Class
@@ -37,9 +29,9 @@ namespace Syslog.Server.Data
         {
             lock (Locker)
             {
-                using (FileStream fileStream = new FileStream(path: path, mode: FileMode.Append))
+                using (System.IO.FileStream fileStream = new System.IO.FileStream(path: path, mode: System.IO.FileMode.Append))
                 {
-                    byte[] encodedText = Encoding.Unicode.GetBytes(message);
+                    byte[] encodedText = System.Text.Encoding.Unicode.GetBytes(message);
                     fileStream.Write(encodedText, 0, encodedText.Length);
                 }
             }

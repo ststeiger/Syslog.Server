@@ -1,26 +1,17 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="Program.cs" company="https://github.com/jhueppauff/Syslog.Server">
-// Copyright 2018 Jhueppauff
-// MIT License
-// For licence details visit https://github.com/jhueppauff/Syslog.Server/blob/master/LICENSE
-// </copyright>
-//-----------------------------------------------------------------------
-
+﻿
 namespace Syslog.Server
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Text;
-    using System.Threading;
+    
+    
     using Syslog.Server.Data;
-
+    
+    
     /// <summary>
     /// Program class
     /// </summary>
     /// <seealso cref="System.IDisposable" />
-    public class Program : IDisposable
+    public class Program 
+        : System.IDisposable
     {
         /// <summary>
         /// As long this is true the Service will continue to receive new Messages.
@@ -30,22 +21,22 @@ namespace Syslog.Server
         /// <summary>
         /// Message Queue of the type Data.Message.
         /// </summary>
-        private static Queue<Message> messageQueue = new Queue<Message>();
+        private static System.Collections.Generic.Queue<Message> messageQueue = new System.Collections.Generic.Queue<Message>();
 
         /// <summary>
         /// Message Trigger
         /// </summary>
-        private static AutoResetEvent messageTrigger = new AutoResetEvent(false);
+        private static System.Threading.AutoResetEvent messageTrigger = new System.Threading.AutoResetEvent(false);
 
         /// <summary>
         /// Listener Address
         /// </summary>
-        private static IPEndPoint anyIP = new IPEndPoint(IPAddress.Any, 514);
+        private static System.Net.IPEndPoint anyIP = new System.Net.IPEndPoint(System.Net.IPAddress.Any, 514);
         
         /// <summary>
         /// Listener Port and Protocol
         /// </summary>
-        private static UdpClient udpListener = new UdpClient(514);
+        private static System.Net.Sockets.UdpClient udpListener = new System.Net.Sockets.UdpClient(514);
 
         /// <summary>
         /// The log file
@@ -69,11 +60,11 @@ namespace Syslog.Server
             }
             else
             {
-                Console.WriteLine("Missing Argument (logfile)");
+                System.Console.WriteLine("Missing Argument (logfile)");
             }
 
             // Main processing Thread
-            Thread handler = new Thread(new ThreadStart(HandleMessage))
+            System.Threading.Thread handler = new System.Threading.Thread(new System.Threading.ThreadStart(HandleMessage))
             {
                 IsBackground = true
             };
@@ -87,17 +78,22 @@ namespace Syslog.Server
                 {
                     anyIP.Port = 514;
 
+                    // https://www.real-world-systems.com/docs/logger.1.html
+                    // sudo apt-get install bsdutils
+                    // logger -p auth.notice "Some message for the auth.log file"
+                    // logger -p auth.notice "Some message for the auth.log file" --server 127.0.0.1 
+
                     // Receive the message
                     byte[] bytesReceive = udpListener.Receive(ref anyIP);
 
                     // push the message to the queue, and trigger the queue
                     Data.Message msg = new Data.Message
                     {
-                        MessageText = Encoding.ASCII.GetString(bytesReceive),
-                        RecvTime = DateTime.Now,
+                        MessageText = System.Text.Encoding.ASCII.GetString(bytesReceive),
+                        RecvTime = System.DateTime.Now,
                         SourceIP = anyIP.Address
                     };
-
+                    
                     lock (messageQueue)
                     {
                         messageQueue.Enqueue(msg);
@@ -105,9 +101,10 @@ namespace Syslog.Server
 
                     messageTrigger.Set();
                 }
-                catch (Exception)
+                catch (System.Exception ex)
                 {
                     // ToDo: Add Error Handling
+                    System.Console.WriteLine(ex.Message);
                 }
             }
         }
@@ -119,7 +116,7 @@ namespace Syslog.Server
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             this.Dispose(true);
-            GC.SuppressFinalize(this);
+            System.GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -154,7 +151,7 @@ namespace Syslog.Server
                     messageArray = messageQueue.ToArray();
                 }
 
-                Thread messageprochandler = new Thread(() => HandleMessageProcessing(messageArray))
+                System.Threading.Thread messageprochandler = new System.Threading.Thread(() => HandleMessageProcessing(messageArray))
                 {
                     IsBackground = true
                 };
@@ -171,7 +168,7 @@ namespace Syslog.Server
             foreach (Data.Message message in messages)
             {
                 LogToFile(message.MessageText, message.SourceIP, message.RecvTime);
-                Console.WriteLine(message.MessageText);
+                System.Console.WriteLine(message.MessageText);
 
                 if (Program.messageQueue.Count != 0)
                 {
@@ -186,7 +183,7 @@ namespace Syslog.Server
         /// <param name="msg">Message which was sent from the Syslog Client</param>
         /// <param name="ipSourceAddress">Source IP of the Syslog Sender</param>
         /// <param name="receiveTime">Receive Time of the Syslog Message</param>
-        private static void LogToFile(string msg, IPAddress ipSourceAddress, DateTime receiveTime)
+        private static void LogToFile(string msg, System.Net.IPAddress ipSourceAddress, System.DateTime receiveTime)
         {
             Log log = new Log();
             log.WriteToLog($"{msg}; {ipSourceAddress}; {receiveTime}\n", logFile);
